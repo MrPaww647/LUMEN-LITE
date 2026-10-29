@@ -2,9 +2,9 @@
 #define SHADOWS // Enable sun shadows
 #define shadowDistance 96.0 // Shadow distance in blocks [32.0 48.0 64.0 96.0 128.0]
 #define shadowSoftness 1 // PCF filter taps [0 1 2]
-#define shadowStrength 0.72 // Shadow contrast [0.45 0.6 0.72 0.85 1.0]
 #define reflectionStrength 0.42 // SSR intensity [0.0 0.2 0.4 0.6 0.8]
 #define reflectionSteps 12 // SSR ray steps [4 8 12 16 24]
+#define shadowStrength 0.72 // Shadow contrast [0.45 0.6 0.72 0.85 1.0]
 #define atmosphereStrength 0.18 // Color grade [0.0 0.1 0.2 0.3 0.4]
 #define saturationStrength 1.0 // Saturation [0.8 0.9 1.0 1.1 1.2]
 
@@ -64,7 +64,8 @@ float getShadow(vec3 viewPos) {
 #endif
 }
 
-vec3 screenSpaceReflection(vec2 uv, float depth, vec3 normal) {
+vec3 screenSpaceReflection(vec2 uv, float depth, vec3 normal, out float confidence) {
+    confidence = 0.0;
     if (depth >= 0.99999 || reflectionStrength <= 0.001) return vec3(0.0);
     vec3 origin = reconstructView(uv, depth);
     vec3 incident = normalize(origin);
@@ -99,8 +100,8 @@ vec3 screenSpaceReflection(vec2 uv, float depth, vec3 normal) {
     if (hit < 0.5) return vec3(0.0);
     float edgeFade = clamp(min(min(hitUV.x, 1.0-hitUV.x), min(hitUV.y, 1.0-hitUV.y)) * 9.0, 0.0, 1.0);
     float distanceFade = 1.0 - clamp(travel / endDistance, 0.0, 1.0);
-    float confidence = edgeFade * distanceFade * reflectionStrength;
-    return texture(colortex0, hitUV).rgb * confidence;
+    confidence = edgeFade * distanceFade * reflectionStrength;
+    return texture(colortex0, hitUV).rgb;
 }
 
 void main() {
@@ -118,9 +119,10 @@ void main() {
     vec4 water = texture(colortex1, texcoord);
     if (water.a > 0.5) {
         vec3 normal = normalize(water.rgb * 2.0 - 1.0);
-        vec3 reflected = screenSpaceReflection(texcoord, texture(depthtex0, texcoord).r, normal);
+        float reflectionConfidence = 0.0;
+        vec3 reflected = screenSpaceReflection(texcoord, texture(depthtex0, texcoord).r, normal, reflectionConfidence);
         float facing = clamp(abs(normal.z), 0.12, 0.9);
-        base.rgb = mix(base.rgb, reflected, clamp(reflectionStrength * facing, 0.0, 0.58));
+        base.rgb = mix(base.rgb, reflected, clamp(reflectionConfidence * facing, 0.0, 0.65));
     }
 
     float rain = clamp(rainStrength, 0.0, 1.0);
