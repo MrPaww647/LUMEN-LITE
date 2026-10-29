@@ -1,33 +1,31 @@
-# LUMEN LITE — Shaderpack prototype (Minecraft Java 1.21.1 / Iris)
+# LUMEN LITE 2.0 — Minecraft Java 1.21.1 / Iris
 
-A standalone Vanilla+ shaderpack focused on low overhead, restrained color grading, a lightweight shadow-map pass, and shader settings exposed through Iris.
+Lightweight Vanilla+ shaderpack prototype focused on restrained lighting, filtered shadows, and experimental screen-space reflections (SSR).
 
 ## Install
-1. Install Minecraft Java 1.21.1 and a matching Iris Shaders installation (Fabric is the common route; Sodium is recommended).
-2. Copy `LUMEN-LITE.zip` into `.minecraft/shaderpacks/`.
-3. In Options → Video Settings → Shader Packs, select **LUMEN LITE**.
-4. Open Shader Pack Settings to select Performance, Balanced, or Quality.
+1. Use Minecraft Java 1.21.1 with a compatible Iris Shaders installation.
+2. Download the repository as ZIP, or use the shaderpack ZIP from Releases when one is published.
+3. Place the ZIP in `.minecraft/shaderpacks/`.
+4. Select **LUMEN LITE** in Options → Video Settings → Shader Packs.
+5. Start with the **Balanced** profile; use **Performance** on low-end systems.
 
-## What this source implements
-- Iris shader-pack structure with terrain, water, entity, shadow, composite, and final programs.
-- A shadow pass and a basic shadow-map sampling pass. Actual visual correctness depends on Iris version, GPU, dimension, and renderer interactions; test in-game.
-- A lightweight lightmap-based warm/cool color approximation. This is **not true per-block dynamic lighting**.
-- Water tint and final color grading settings.
-- Performance / Balanced / Quality option profiles.
+## 2.0 changes
+- Reduced colored-light tint so torch-lit blocks should not look overexposed or overly saturated.
+- Added configurable shadow contrast and a small percentage-closer filtering (PCF) kernel.
+- Added an experimental SSR pass that traces against the opaque depth buffer and samples scene color. A player model may reflect only if the renderer includes it in the scene buffers and the reflection ray finds it.
+- Separated the water mask/normal buffer and composite output buffer to avoid sampling from the same render target being written.
+- Added Performance, Balanced, and Quality profiles with different shadow and reflection costs.
 
-## Explicit limitations
-- **Dynamic light:** no true moving-source illumination is implemented. GLSL shaders do not receive a universal list of nearby torch/lava/item light positions. For actual held-item and moving light sources, use a compatible dynamic-lights mod alongside a shaderpack, if supported by the chosen Minecraft/Iris setup.
-- **Player reflection:** there is no true SSR reflection implementation in this first build. Screen-space reflection needs ray marching against scene depth and cannot reflect a player that is not present in the sampled scene buffers.
-- **Transparent ice:** a shaderpack cannot reliably change vanilla block render layers and sorting on its own. Use a resource pack or compatible mod if fully transparent ice is required.
-- **Water:** this build changes water tint; it does not claim full environment reflections or animated geometric waves.
-- **Player shadows:** the shadow pass can render entities when Iris sends them to that pass, but entity shadow participation varies with renderer and shader configuration. Verify in a test world.
-- **Soft shadows:** the current filter is intentionally small and lightweight, not high-quality PCF.
+## Important limitations
+- SSR is a screen-space approximation: it cannot reflect objects outside the screen, hidden behind other geometry, or absent from the sampled scene color. Depending on Iris/renderer pass ordering, player reflections may be incomplete. This needs in-game validation.
+- This is not full dynamic lighting. A shaderpack does not receive a universal list of nearby torch, lava, or dropped-item light sources. Use a compatible dynamic-lights mod for moving light sources if desired.
+- Soft shadows and SSR depend on shader compiler, Iris version, GPU, and render target behavior. This source has not been tested in a running Minecraft client here.
+- Ice transparency and true volumetric lighting are not implemented in this build.
+- The current water treatment is screen-space and lightweight; it is not physically based ray-traced reflection or geometric wave simulation.
 
-## Troubleshooting
-- If the pack fails to compile, press `Ctrl+D` on the Shader Packs screen to enable Iris debug information, then check `latest.log` for the first shader compile error.
-- Confirm the Minecraft version and Iris build match, and temporarily disable other rendering mods that alter shaders.
-- If the screen is black or shadows look incorrect, switch to Performance profile, disable SHADOWS, and retry. This helps isolate shader pipeline compatibility.
-- Report the exact Iris version, GPU, Minecraft version, and first compile error when diagnosing a failure.
+## Tuning
+- **Performance:** 512 shadow map, shorter distance, no SSR.
+- **Balanced:** 1024 shadow map, 12 SSR steps, modest filtering.
+- **Quality:** 1536 shadow map, longer distance, stronger filtering and more SSR steps.
 
-## Development status
-This is a source-complete initial implementation, but it has **not been launched inside a Minecraft client in this environment**. Treat it as a test build until validated in-game. No claim is made that every feature in the original target specification is complete.
+If the pack fails to compile, check `.minecraft/logs/latest.log` for the first shader compilation error and report the Iris version, GPU, and the exact error. This is an experimental update and should be validated in-game before treating the effects as production-ready.
