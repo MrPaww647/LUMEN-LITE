@@ -4,10 +4,11 @@ Lightweight Vanilla+ shaderpack prototype focused on restrained lighting, filter
 
 ## Install
 1. Use Minecraft Java 1.21.1 with a compatible Iris Shaders installation.
-2. Download the repository as ZIP, or use the shaderpack ZIP from Releases when one is published.
-3. Place the ZIP in `.minecraft/shaderpacks/`.
-4. Select **LUMEN LITE** in Options → Video Settings → Shader Packs.
-5. Start with the **Balanced** profile; use **Performance** on low-end systems.
+2. Download this repository as ZIP and extract it, or clone it with Git.
+3. In Windows, right-click `build-shaderpack.ps1` and run with PowerShell (or run it from a PowerShell terminal inside the project folder). It creates `LUMEN-LITE.zip` with the correct shaderpack root structure.
+4. Place `LUMEN-LITE.zip` in `.minecraft/shaderpacks/`.
+5. Select **LUMEN LITE** in Options → Video Settings → Shader Packs.
+6. Start with the **Balanced** profile; use **Performance** on low-end systems.
 
 ## 2.0 changes
 - Reduced colored-light tint so torch-lit blocks should not look overexposed or overly saturated.
